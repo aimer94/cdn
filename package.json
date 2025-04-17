@@ -4,8 +4,9 @@
   "description": "Proxy untuk mengompresi gambar menggunakan Netlify Edge Functions",
   "main": "index.js",
   "dependencies": {
+    "node-fetch": "^3.0.0",
     "sharp": "^0.32.0",
-    "node-fetch": "^3.0.0"
+    "cheerio": "^1.0.0-rc.12"
   },
   "license": "MIT"
 }
