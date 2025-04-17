@@ -1,16 +1,18 @@
 {
-  "name": "my-image-compressor",
+  "name": "image-compressor-proxy",
   "version": "1.0.0",
-  "description": "A Netlify Edge Function to compress images",
-  "main": "compress.js",
+  "description": "A Netlify Edge Function to proxy and compress images from komiku.id",
+  "main": "index.js",
   "scripts": {
     "start": "netlify dev"
   },
   "dependencies": {
     "node-fetch": "^2.6.1",
-    "sharp": "^0.29.3"
+    "sharp": "^0.29.3",
+    "jsdom": "^19.0.0"
   },
   "engines": {
     "node": "14.x"
-  }
+  },
+  "license": "MIT"
 }
