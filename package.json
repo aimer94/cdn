@@ -4,7 +4,8 @@
   "description": "A Netlify Function to proxy and compress images from a given URL",
   "main": "compress.js",
   "scripts": {
-    "start": "npm start"
+    "start": "npm start",
+    "install:sharp": "npm install --platform=linux --arch=x64 sharp"
   },
   "dependencies": {
     "node-fetch": "^2.6.1",
