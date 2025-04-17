@@ -1,45 +1,62 @@
-// File: netlify/functions/image-proxy.js
-const sharp = require('sharp');
 const fetch = require('node-fetch');
+const sharp = require('sharp');
+const cheerio = require('cheerio');
 
-export async function handler(event) {
-  const { path } = event.queryStringParameters;
+exports.handler = async (event) => {
+  const { url } = event.queryStringParameters;
 
-  if (!path) {
+  if (!url) {
     return {
       statusCode: 400,
-      body: 'Path parameter is required.',
+      body: 'Parameter "url" diperlukan untuk memuat halaman.',
     };
   }
 
-  const targetUrl = `https://komiku.id/${path}`;
   try {
-    const response = await fetch(targetUrl);
-    const contentType = response.headers.get('content-type');
+    // Fetch halaman dari URL target
+    const response = await fetch(url);
+    const html = await response.text();
 
-    if (!contentType || !contentType.startsWith('image/')) {
-      return {
-        statusCode: 400,
-        body: 'Requested resource is not an image.',
-      };
-    }
+    // Parse HTML menggunakan cheerio
+    const $ = cheerio.load(html);
 
-    const originalImage = await response.buffer();
-    const compressedImage = await sharp(originalImage)
-      .resize({ width: 800 }) // Mengatur ukuran maksimal untuk mengoptimalkan kecepatan
-      .jpeg({ quality: 75 }) // Mengurangi kualitas gambar untuk kompresi
-      .toBuffer();
+    // Proses semua elemen <img> untuk kompresi
+    const promises = $('img').map(async (_, img) => {
+      const originalSrc = $(img).attr('src');
+      if (originalSrc) {
+        try {
+          const imageResponse = await fetch(originalSrc);
+          const imageBuffer = await imageResponse.buffer();
 
+          // Kompresi gambar menggunakan sharp
+          const compressedImage = await sharp(imageBuffer)
+            .resize({ width: 800 }) // Sesuaikan ukuran
+            .jpeg({ quality: 75 }) // Kualitas gambar
+            .toBuffer();
+
+          // Encode hasil kompresi ke base64 dan gantikan src
+          const base64Image = `data:image/jpeg;base64,${compressedImage.toString('base64')}`;
+          $(img).attr('src', base64Image);
+        } catch (error) {
+          console.error(`Gagal mengompresi gambar: ${originalSrc}`, error);
+        }
+      }
+    }).get();
+
+    // Tunggu semua proses selesai
+    await Promise.all(promises);
+
+    // Kembalikan halaman HTML yang telah dimodifikasi
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'image/jpeg' },
-      body: compressedImage.toString('base64'),
-      isBase64Encoded: true,
+      headers: { 'Content-Type': 'text/html' },
+      body: $.html(),
     };
   } catch (error) {
+    console.error('Error saat memuat atau memproses halaman:', error);
     return {
       statusCode: 500,
       body: `Error: ${error.message}`,
     };
   }
-}
+};
