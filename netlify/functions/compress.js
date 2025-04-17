@@ -1,8 +1,10 @@
-const fetch = require('node-fetch');
 const sharp = require('sharp');
 const cheerio = require('cheerio');
 
+// Gunakan import() dinamis untuk node-fetch
 exports.handler = async (event) => {
+  const fetch = await import('node-fetch').then((module) => module.default);
+
   const { url } = event.queryStringParameters;
 
   if (!url) {
@@ -13,28 +15,28 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Ambil halaman dari URL yang diminta
+    // Ambil halaman dari URL target
     const response = await fetch(url);
     const html = await response.text();
 
-    // Muat HTML dengan cheerio untuk manipulasi
+    // Parse HTML menggunakan cheerio
     const $ = cheerio.load(html);
 
-    // Proses semua elemen <img> dan ganti dengan versi terkompresi
+    // Proses semua elemen <img> untuk kompresi
     const promises = $('img').map(async (_, img) => {
       const originalSrc = $(img).attr('src');
       if (originalSrc) {
         try {
           const imageResponse = await fetch(originalSrc);
-          const imageBuffer = await imageResponse.buffer();
+          const imageBuffer = await imageResponse.arrayBuffer();
 
           // Kompresi gambar dengan sharp
-          const compressedImage = await sharp(imageBuffer)
-            .resize({ width: 800 }) // Atur ukuran maksimal
-            .jpeg({ quality: 75 }) // Sesuaikan kualitas
+          const compressedImage = await sharp(Buffer.from(imageBuffer))
+            .resize({ width: 800 }) // Ukuran maksimal
+            .jpeg({ quality: 75 }) // Kualitas gambar
             .toBuffer();
 
-          // Ganti URL gambar dengan data base64
+          // Encode gambar hasil kompresi ke base64
           const base64Image = `data:image/jpeg;base64,${compressedImage.toString('base64')}`;
           $(img).attr('src', base64Image);
         } catch (error) {
@@ -46,7 +48,7 @@ exports.handler = async (event) => {
     // Tunggu semua proses selesai
     await Promise.all(promises);
 
-    // Kembalikan HTML yang sudah dimodifikasi
+    // Kembalikan HTML yang dimodifikasi
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html' },
