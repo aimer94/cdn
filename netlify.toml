@@ -2,6 +2,6 @@
   functions = "netlify/functions"
 
 [[redirects]]
-  from = "/"
+  from = "*/"
   to = "/.netlify/functions/compress"
   status = 200
