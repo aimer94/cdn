@@ -22,8 +22,12 @@ exports.handler = async (event) => {
     // Parse HTML menggunakan cheerio
     const $ = cheerio.load(html);
 
-    // Proses semua elemen <img> dan kompres gambar
-    const promises = $('img').map(async (_, img) => {
+    // Proses elemen <img> secara bertahap untuk menghindari timeout
+    const images = $('img').toArray(); // Ambil semua elemen gambar
+    const maxImages = 1; // Batasi jumlah gambar yang diproses per permintaan
+
+    for (let i = 0; i < Math.min(images.length, maxImages); i++) {
+      const img = images[i];
       const originalSrc = $(img).attr('src');
       if (originalSrc) {
         try {
@@ -44,10 +48,7 @@ exports.handler = async (event) => {
           console.error(`Gagal mengompresi gambar: ${originalSrc}`, error);
         }
       }
-    }).get();
-
-    // Tunggu semua proses selesai
-    await Promise.all(promises);
+    }
 
     // Kembalikan HTML yang sudah dimodifikasi
     return {
