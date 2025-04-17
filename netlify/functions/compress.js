@@ -1,10 +1,8 @@
-const sharp = require('sharp');
+const fetch = require('node-fetch');
 const cheerio = require('cheerio');
+const Jimp = require('jimp');
 
-// Gunakan import() dinamis untuk node-fetch
 exports.handler = async (event) => {
-  const fetch = await import('node-fetch').then((module) => module.default);
-
   const { url } = event.queryStringParameters;
 
   if (!url) {
@@ -15,30 +13,31 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Ambil halaman dari URL target
+    // Fetch halaman dari URL target
     const response = await fetch(url);
     const html = await response.text();
 
     // Parse HTML menggunakan cheerio
     const $ = cheerio.load(html);
 
-    // Proses semua elemen <img> untuk kompresi
+    // Proses semua elemen <img> dan kompres gambar
     const promises = $('img').map(async (_, img) => {
       const originalSrc = $(img).attr('src');
       if (originalSrc) {
         try {
           const imageResponse = await fetch(originalSrc);
-          const imageBuffer = await imageResponse.arrayBuffer();
+          const imageBuffer = await imageResponse.buffer();
 
-          // Kompresi gambar dengan sharp
-          const compressedImage = await sharp(Buffer.from(imageBuffer))
-            .resize({ width: 800 }) // Ukuran maksimal
-            .jpeg({ quality: 75 }) // Kualitas gambar
-            .toBuffer();
+          // Kompresi gambar dengan Jimp
+          const compressedImage = await Jimp.read(imageBuffer)
+            .then((image) => {
+              return image.resize(800, Jimp.AUTO) // Resize gambar
+                .quality(75) // Kualitas gambar
+                .getBase64Async(Jimp.MIME_JPEG); // Konversi ke base64
+            });
 
-          // Encode gambar hasil kompresi ke base64
-          const base64Image = `data:image/jpeg;base64,${compressedImage.toString('base64')}`;
-          $(img).attr('src', base64Image);
+          // Ganti URL gambar dengan data base64
+          $(img).attr('src', compressedImage);
         } catch (error) {
           console.error(`Gagal mengompresi gambar: ${originalSrc}`, error);
         }
@@ -48,7 +47,7 @@ exports.handler = async (event) => {
     // Tunggu semua proses selesai
     await Promise.all(promises);
 
-    // Kembalikan HTML yang dimodifikasi
+    // Kembalikan HTML yang sudah dimodifikasi
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html' },
