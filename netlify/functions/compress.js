@@ -1,7 +1,6 @@
 const cheerio = require('cheerio');
 const Jimp = require('jimp');
 
-// Gunakan import() dinamis untuk node-fetch
 exports.handler = async (event) => {
   const fetch = await import('node-fetch').then((module) => module.default);
 
@@ -22,11 +21,26 @@ exports.handler = async (event) => {
     // Parse HTML menggunakan cheerio
     const $ = cheerio.load(html);
 
-    // Proses elemen <img> secara bertahap untuk menghindari timeout
-    const images = $('img').toArray(); // Ambil semua elemen gambar
-    const maxImages = 1; // Batasi jumlah gambar yang diproses per permintaan
+    // Perbaiki URL semua resource <link>, <script>, dan <img>
+    $('link, script, img').each((_, elem) => {
+      const attr = $(elem).attr('src') || $(elem).attr('href');
+      if (attr && !attr.startsWith('http')) {
+        // Pastikan resource memiliki URL absolut
+        const absoluteUrl = new URL(attr, url).href;
+        if ($(elem).is('img')) {
+          $(elem).attr('src', absoluteUrl);
+        } else {
+          $(elem).attr('href', absoluteUrl);
+          $(elem).attr('src', absoluteUrl);
+        }
+      }
+    });
 
-    for (let i = 0; i < Math.min(images.length, maxImages); i++) {
+    // Batasi pemrosesan hanya untuk beberapa gambar per batch
+    const images = $('img').toArray(); // Ambil semua elemen gambar
+    const batchSize = 10; // Jumlah gambar per batch
+
+    for (let i = 0; i < Math.min(images.length, batchSize); i++) {
       const img = images[i];
       const originalSrc = $(img).attr('src');
       if (originalSrc) {
