@@ -1,8 +1,10 @@
-const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const Jimp = require('jimp');
 
+// Gunakan import() dinamis untuk node-fetch
 exports.handler = async (event) => {
+  const fetch = await import('node-fetch').then((module) => module.default);
+
   const { url } = event.queryStringParameters;
 
   if (!url) {
@@ -13,7 +15,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Fetch halaman dari URL target
+    // Ambil halaman dari URL target
     const response = await fetch(url);
     const html = await response.text();
 
