@@ -1,15 +1,22 @@
 // netlify/functions/proxy-compress.js
 
 const fetch = require('node-fetch');
-const sharp = require('sharp;
+const sharp = require('sharp');
 const { JSDOM } = require('jsdom');
 
 exports.handler = async (event, context) => {
-    const targetUrl = 'https://komiku.id' + event.path;
+    const urlParam = new URLSearchParams(event.queryStringParameters).get('url');
+
+    if (!urlParam) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'URL parameter is required' }),
+        };
+    }
 
     try {
         // Mengambil konten dari halaman target
-        const response = await fetch(targetUrl);
+        const response = await fetch(urlParam);
         const html = await response.text();
 
         // Menggunakan JSDOM untuk memanipulasi HTML
@@ -49,6 +56,7 @@ exports.handler = async (event, context) => {
             body: dom.serialize(),
         };
     } catch (error) {
+        console.error(error); // Menambahkan log untuk debugging
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Failed to fetch or compress images' }),
