@@ -1,0 +1,11 @@
+{
+  "name": "cdn",
+  "version": "1.0.0",
+  "description": "Netlify Edge proxy that compresses all images from komiku.id to ≤1kb while preserving resolution",
+  "scripts": {
+    "build": "npm install"
+  },
+  "dependencies": {
+    "@squoosh/lib": "^0.5.2"
+  }
+}
