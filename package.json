@@ -1,12 +1,15 @@
 {
-  "name": "image-proxy",
+  "name": "proxy-komiku",
   "version": "1.0.0",
-  "description": "Proxy untuk mengompresi gambar menggunakan Netlify Edge Functions",
+  "description": "Proxy untuk mempercepat halaman komiku.id dengan kompresi gambar menggunakan jimp",
   "main": "index.js",
   "dependencies": {
     "node-fetch": "^3.0.0",
-    "sharp": "^0.32.0",
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12",
+    "jimp": "^0.16.1"
+  },
+  "scripts": {
+    "start": "netlify dev"
   },
   "license": "MIT"
 }
