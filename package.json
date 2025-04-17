@@ -1,11 +1,16 @@
 {
-  "name": "cdn",
+  "name": "my-image-compressor",
   "version": "1.0.0",
-  "description": "Netlify Edge proxy that compresses all images from komiku.id to ≤1kb while preserving resolution",
+  "description": "A Netlify Edge Function to compress images",
+  "main": "compress.js",
   "scripts": {
-    "build": "npm install"
+    "start": "netlify dev"
   },
   "dependencies": {
-    "@squoosh/lib": "^0.5.2"
+    "node-fetch": "^2.6.1",
+    "sharp": "^0.29.3"
+  },
+  "engines": {
+    "node": "14.x"
   }
 }
