@@ -13,14 +13,14 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Fetch halaman dari URL target
+    // Ambil halaman dari URL yang diminta
     const response = await fetch(url);
     const html = await response.text();
 
-    // Parse HTML menggunakan cheerio
+    // Muat HTML dengan cheerio untuk manipulasi
     const $ = cheerio.load(html);
 
-    // Proses semua elemen <img> untuk kompresi
+    // Proses semua elemen <img> dan ganti dengan versi terkompresi
     const promises = $('img').map(async (_, img) => {
       const originalSrc = $(img).attr('src');
       if (originalSrc) {
@@ -28,13 +28,13 @@ exports.handler = async (event) => {
           const imageResponse = await fetch(originalSrc);
           const imageBuffer = await imageResponse.buffer();
 
-          // Kompresi gambar menggunakan sharp
+          // Kompresi gambar dengan sharp
           const compressedImage = await sharp(imageBuffer)
-            .resize({ width: 800 }) // Sesuaikan ukuran
-            .jpeg({ quality: 75 }) // Kualitas gambar
+            .resize({ width: 800 }) // Atur ukuran maksimal
+            .jpeg({ quality: 75 }) // Sesuaikan kualitas
             .toBuffer();
 
-          // Encode hasil kompresi ke base64 dan gantikan src
+          // Ganti URL gambar dengan data base64
           const base64Image = `data:image/jpeg;base64,${compressedImage.toString('base64')}`;
           $(img).attr('src', base64Image);
         } catch (error) {
@@ -46,7 +46,7 @@ exports.handler = async (event) => {
     // Tunggu semua proses selesai
     await Promise.all(promises);
 
-    // Kembalikan halaman HTML yang telah dimodifikasi
+    // Kembalikan HTML yang sudah dimodifikasi
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html' },
