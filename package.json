@@ -1,19 +1,12 @@
 {
-  "name": "image-compressor-proxy",
+  "name": "image-proxy",
   "version": "1.0.0",
-  "description": "A Netlify Function to proxy and compress images from a given URL",
-  "main": "compress.js",
-  "scripts": {
-    "start": "npm start",
-    "install:sharp": "npm install --platform=linux --arch=x64 sharp"
-  },
+  "description": "Proxy untuk mengompresi gambar menggunakan Netlify Edge Functions",
+  "main": "index.js",
   "dependencies": {
-    "node-fetch": "^2.6.1",
-    "sharp": "^0.29.3",
-    "jsdom": "^19.0.0"
-  },
-  "engines": {
-    "node": "14.x"
+    "sharp": "^0.32.0",
+    "node-fetch": "^3.0.0"
   },
   "license": "MIT"
+}
 }
